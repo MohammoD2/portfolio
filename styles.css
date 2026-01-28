@@ -57,11 +57,6 @@ body {
     transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     line-height: 1.6;
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
 }
 
 .dark body {
@@ -589,11 +584,9 @@ body {
     color: hsl(var(--muted-foreground));
     font-size: 1.125rem;
     opacity: 0;
-    transform: translate3d(-15px, 0, 0);
+    transform: translateX(-15px);
     animation: slideInLeft 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .about-me-item:nth-child(1) {
@@ -611,11 +604,11 @@ body {
 @keyframes slideInLeft {
     from {
         opacity: 0;
-        transform: translate3d(-15px, 0, 0);
+        transform: translateX(-15px);
     }
     to {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translateX(0);
     }
 }
 
@@ -912,27 +905,25 @@ body {
     flex-direction: column;
     align-items: center;
     opacity: 0;
-    transform: translate3d(0, 30px, 0) scale(0.95);
-    transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateY(30px) scale(0.95);
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .stat-item.animate {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translateY(0) scale(1);
     animation: statFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes statFadeIn {
     0% {
         opacity: 0;
-        transform: translate3d(0, 30px, 0) scale(0.95);
+        transform: translateY(30px) scale(0.95);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -1418,10 +1409,8 @@ body {
     display: flex;
     flex-direction: column;
     opacity: 0;
-    transform: translate3d(0, 30px, 0) scale(0.96);
+    transform: translateY(30px) scale(0.96);
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .project-card.animate {
@@ -1431,11 +1420,11 @@ body {
 @keyframes projectFadeIn {
     0% {
         opacity: 0;
-        transform: translate3d(0, 30px, 0) scale(0.96);
+        transform: translateY(30px) scale(0.96);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -1795,27 +1784,25 @@ body {
     gap: 1rem;
     align-items: flex-start;
     opacity: 0;
-    transform: translate3d(-15px, 0, 0);
-    transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateX(-15px);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .achievement-item.animate {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateX(0);
     animation: achievementFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes achievementFadeIn {
     0% {
         opacity: 0;
-        transform: translate3d(-15px, 0, 0);
+        transform: translateX(-15px);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translateX(0);
     }
 }
 
@@ -1863,28 +1850,26 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    transition: opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     opacity: 0;
-    transform: translate3d(0, 10px, 0);
+    transform: translateY(10px);
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .certification-item.animate {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0);
     animation: certFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes certFadeIn {
     0% {
         opacity: 0;
-        transform: translate3d(0, 10px, 0);
+        transform: translateY(10px);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translateY(0);
     }
 }
 
@@ -2002,27 +1987,25 @@ body {
     background: hsl(var(--card));
     flex-shrink: 0;
     opacity: 0;
-    transform: translate3d(30px, 0, 0) scale(0.96);
-    transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateX(30px) scale(0.96);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .timeline-item.animate {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translateX(0) scale(1);
     animation: timelineFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes timelineFadeIn {
     0% {
         opacity: 0;
-        transform: translate3d(30px, 0, 0) scale(0.96);
+        transform: translateX(30px) scale(0.96);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translateX(0) scale(1);
     }
 }
 
@@ -2271,12 +2254,10 @@ body {
     background: hsl(var(--card));
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     opacity: 0;
-    transform: translate3d(0, 25px, 0) scale(0.97);
+    transform: translateY(25px) scale(0.97);
     position: relative;
     overflow: hidden;
     will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .service-card.animate {
@@ -2286,11 +2267,11 @@ body {
 @keyframes serviceFadeIn {
     0% {
         opacity: 0;
-        transform: translate3d(0, 25px, 0) scale(0.97);
+        transform: translateY(25px) scale(0.97);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -2485,12 +2466,10 @@ body {
     box-shadow: 0 0 10px rgba(168, 85, 247, 0.2), 0 0 20px rgba(168, 85, 247, 0.1);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
-    transform: translate3d(0, 20px, 0) scale(0.9);
+    transform: scale(0.9) translateY(20px);
     position: relative;
     overflow: hidden;
     min-height: fit-content;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
 }
 
 .expertise-card.compact {
@@ -2504,14 +2483,14 @@ body {
 @keyframes expertisePopIn {
     0% {
         opacity: 0;
-        transform: translate3d(0, 30px, 0) scale(0.8) rotateZ(-5deg);
+        transform: scale(0.8) translateY(30px) rotateZ(-5deg);
     }
     60% {
-        transform: translate3d(0, -3px, 0) scale(1.05) rotateZ(2deg);
+        transform: scale(1.05) translateY(-3px) rotateZ(2deg);
     }
     100% {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1) rotateZ(0deg);
+        transform: scale(1) translateY(0) rotateZ(0deg);
     }
 }
 
@@ -2853,25 +2832,5 @@ body {
 /* Smooth Scroll */
 html {
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Prevent flickering during scroll */
-* {
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Optimize rendering for animations */
-.animate,
-.stat-item,
-.project-card,
-.service-card,
-.expertise-card,
-.achievement-item,
-.certification-item,
-.timeline-item {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform, opacity;
 }
 

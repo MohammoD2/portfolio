@@ -594,6 +594,15 @@ function renderProjects() {
 
             projectCard.addEventListener('click', () => openProjectModal(project));
             container.appendChild(projectCard);
+            
+            // Trigger animation after a short delay
+            setTimeout(() => {
+                projectCard.style.opacity = '0';
+                projectCard.style.transform = 'translateY(30px) scale(0.95)';
+                setTimeout(() => {
+                    projectCard.classList.add('animate');
+                }, 50);
+            }, 10);
         });
 
         if (visibleCount >= portfolioData.projects.length) {
@@ -895,54 +904,66 @@ function initSmoothScroll() {
 // Intersection Observer for Animations
 function initScrollAnimations() {
     const observerOptions = {
-        threshold: 0.15,
-        rootMargin: '0px 0px -50px 0px'
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting && !entry.target.classList.contains('animate')) {
-                requestAnimationFrame(() => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
                     entry.target.classList.add('animate');
-                });
+                }, index * 100);
                 observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
     // Stats animation
-    document.querySelectorAll('.stat-item').forEach((el) => {
+    document.querySelectorAll('.stat-item').forEach((el, index) => {
         observer.observe(el);
     });
 
     // Projects animation
-    document.querySelectorAll('.project-card').forEach((el) => {
-        observer.observe(el);
+    document.querySelectorAll('.project-card').forEach((el, index) => {
+        setTimeout(() => {
+            observer.observe(el);
+        }, index * 50);
     });
 
     // Services animation
-    document.querySelectorAll('.service-card').forEach((el) => {
-        observer.observe(el);
+    document.querySelectorAll('.service-card').forEach((el, index) => {
+        setTimeout(() => {
+            observer.observe(el);
+        }, index * 100);
     });
 
     // Expertise animation
-    document.querySelectorAll('.expertise-card').forEach((el) => {
-        observer.observe(el);
+    document.querySelectorAll('.expertise-card').forEach((el, index) => {
+        setTimeout(() => {
+            observer.observe(el);
+        }, index * 150);
     });
 
     // Achievement items
-    document.querySelectorAll('.achievement-item, .certification-item').forEach((el) => {
-        observer.observe(el);
+    document.querySelectorAll('.achievement-item, .certification-item').forEach((el, index) => {
+        setTimeout(() => {
+            observer.observe(el);
+        }, index * 50);
     });
 
     // Timeline items
-    document.querySelectorAll('.timeline-item').forEach((el) => {
-        observer.observe(el);
+    document.querySelectorAll('.timeline-item').forEach((el, index) => {
+        setTimeout(() => {
+            observer.observe(el);
+        }, index * 100);
     });
 
     // Testimonial cards
-    document.querySelectorAll('.testimonial-card').forEach((el) => {
-        observer.observe(el);
+    document.querySelectorAll('.testimonial-card').forEach((el, index) => {
+        setTimeout(() => {
+            observer.observe(el);
+        }, index * 80);
     });
 }
 
