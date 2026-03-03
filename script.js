@@ -1042,6 +1042,7 @@ function initContactForm() {
         templateId: 'template_cq1p5yl'
     };
 
+    
     const missingConfigLabels = [];
     if (!EMAILJS_CONFIG.publicKey || EMAILJS_CONFIG.publicKey.startsWith('YOUR_')) missingConfigLabels.push('PUBLIC_KEY');
     if (!EMAILJS_CONFIG.serviceId || EMAILJS_CONFIG.serviceId.startsWith('YOUR_')) missingConfigLabels.push('SERVICE_ID');
