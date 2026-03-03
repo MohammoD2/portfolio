@@ -560,6 +560,50 @@
                     <p class="footer-text">Dhaka, Bangladesh</p>
                 </div>
             </div>
+
+            <div class="footer-form-section" aria-labelledby="contactFormTitle">
+                <div class="footer-form-header">
+                    <h4 class="footer-title" id="contactFormTitle">Send a message</h4>
+                    <p class="footer-text">Tell me what you’re building. I usually reply within 24–48 hours.</p>
+                </div>
+
+                <form id="contactForm" class="contact-form" autocomplete="on" novalidate>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="from_name">Your name</label>
+                            <input class="form-input" id="from_name" name="from_name" type="text" placeholder="John Doe" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="reply_to">Your email</label>
+                            <input class="form-input" id="reply_to" name="reply_to" type="email" placeholder="john@email.com" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="service">Service (optional)</label>
+                            <input class="form-input" id="service" name="service" type="text" placeholder="e.g. Machine Learning Solutions">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="subject">Subject</label>
+                            <input class="form-input" id="subject" name="subject" type="text" placeholder="Project inquiry" required>
+                        </div>
+
+                        <div class="form-field full">
+                            <label for="message">Message</label>
+                            <textarea class="form-input" id="message" name="message" rows="6" placeholder="Write your message..." required></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Honeypot field (spam protection) -->
+                    <input class="hp-field" type="text" id="company" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+                    <div id="contactStatus" class="form-status" role="status" aria-live="polite"></div>
+
+                    <button id="contactSubmit" class="btn btn-primary" type="submit">Send Message</button>
+                </form>
+            </div>
+
             <div class="footer-bottom">
                 <p>© <span id="currentYear"></span> Mohammod Ibrahim Hossain. All rights reserved.</p>
                 <div class="footer-bottom-links">
@@ -570,6 +614,7 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="script.js"></script>
     <script src="chatbot.js"></script>
 </body>

@@ -845,6 +845,7 @@ function renderServices() {
             <div class="service-icon"><i class="${service.icon}"></i></div>
             <h3 class="service-title">${service.title}</h3>
             <p class="service-description">${service.description}</p>
+            <a href="#contact" class="btn btn-outline service-cta" data-service="${service.title}">Discuss this →</a>
         `;
 
         container.appendChild(serviceCard);
@@ -887,7 +888,7 @@ function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             const href = this.getAttribute('href');
-            if (href === '#' || href === '#contact') return;
+            if (href === '#') return;
             
             e.preventDefault();
             const target = document.querySelector(href);
@@ -975,6 +976,154 @@ function setCurrentYear() {
     }
 }
 
+function initContactAutofill() {
+    const serviceButtons = document.querySelectorAll('[data-service]');
+    const messageField = document.getElementById('message');
+    const serviceField = document.getElementById('service');
+
+    serviceButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const serviceName = this.getAttribute('data-service');
+            if (serviceName) sessionStorage.setItem('selectedService', serviceName);
+        });
+    });
+
+    function autoFillMessage() {
+        const selectedService = sessionStorage.getItem('selectedService');
+        if (!selectedService) return;
+
+        if (serviceField && !serviceField.value.trim()) {
+            serviceField.value = selectedService;
+        }
+
+        if (messageField && !messageField.value.trim()) {
+            messageField.value = `I'm interested in learning more about: ${selectedService}\n\n`;
+            messageField.focus();
+        }
+
+        sessionStorage.removeItem('selectedService');
+    }
+
+    if (window.location.hash === '#contact') {
+        setTimeout(autoFillMessage, 300);
+    }
+
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) setTimeout(autoFillMessage, 300);
+                });
+            },
+            { threshold: 0.3 }
+        );
+        observer.observe(contactSection);
+    }
+
+    window.addEventListener('hashchange', () => {
+        if (window.location.hash === '#contact') {
+            setTimeout(autoFillMessage, 500);
+        }
+    });
+}
+
+function initContactForm() {
+    // Supports both: id="contactForm" (current) and id="contact-form" (EmailJS docs examples)
+    const form = document.getElementById('contactForm') || document.getElementById('contact-form');
+    const statusEl = document.getElementById('contactStatus');
+    const submitBtn = document.getElementById('contactSubmit');
+
+    if (!form || !statusEl || !submitBtn) return;
+
+    const EMAILJS_CONFIG = {
+        publicKey: 'h_86Nu70XUtT1ylP-',
+        serviceId: 'service_uvjn3z7',
+        templateId: 'template_cq1p5yl'
+    };
+
+    const missingConfigLabels = [];
+    if (!EMAILJS_CONFIG.publicKey || EMAILJS_CONFIG.publicKey.startsWith('YOUR_')) missingConfigLabels.push('PUBLIC_KEY');
+    if (!EMAILJS_CONFIG.serviceId || EMAILJS_CONFIG.serviceId.startsWith('YOUR_')) missingConfigLabels.push('SERVICE_ID');
+    if (!EMAILJS_CONFIG.templateId || EMAILJS_CONFIG.templateId.startsWith('YOUR_')) missingConfigLabels.push('TEMPLATE_ID');
+
+    const hasPlaceholders = missingConfigLabels.length > 0;
+
+    if (typeof window.emailjs === 'undefined') {
+        statusEl.textContent = 'Email service failed to load. Please refresh the page.';
+        statusEl.className = 'form-status error';
+        return;
+    }
+
+    // EmailJS docs pattern: init() before sendForm()
+    (function () {
+        try {
+            window.emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+        } catch {
+            // ignore
+        }
+    })();
+
+    if (hasPlaceholders) {
+        statusEl.textContent = `Contact form is ready — add your EmailJS ${missingConfigLabels.join(', ')} in script.js to enable sending.`;
+        statusEl.className = 'form-status';
+    }
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        // Honeypot check
+        const hp = this.querySelector('input[name="company"]');
+        if (hp && hp.value) return;
+
+        const name = this.querySelector('input[name="from_name"]')?.value?.trim() || '';
+        const email = this.querySelector('input[name="reply_to"]')?.value?.trim() || '';
+        const subject = this.querySelector('input[name="subject"]')?.value?.trim() || '';
+        const message = this.querySelector('textarea[name="message"]')?.value?.trim() || '';
+
+        if (!name || !email || !subject || !message) {
+            statusEl.textContent = 'Please fill in all required fields.';
+            statusEl.className = 'form-status error';
+            return;
+        }
+
+        if (hasPlaceholders) {
+            statusEl.textContent = `EmailJS is not configured yet. Missing: ${missingConfigLabels.join(', ')}.`;
+            statusEl.className = 'form-status error';
+            return;
+        }
+
+        submitBtn.disabled = true;
+        const prevText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending...';
+        statusEl.textContent = 'Sending your message...';
+        statusEl.className = 'form-status';
+
+        try {
+            // EmailJS docs pattern: sendForm(serviceID, templateID, formElement)
+            await window.emailjs.sendForm(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, this);
+
+            statusEl.textContent = 'Message sent! Thanks — I’ll get back to you soon.';
+            statusEl.className = 'form-status success';
+            this.reset();
+        } catch (err) {
+            const details =
+                (err && typeof err === 'object' && ('text' in err) && err.text) ? String(err.text) :
+                (err && typeof err === 'object' && ('message' in err) && err.message) ? String(err.message) :
+                '';
+
+            statusEl.textContent = details
+                ? `Failed to send: ${details}`
+                : 'Failed to send. Please try again in a moment.';
+            statusEl.className = 'form-status error';
+            console.error('EmailJS send failed:', err);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = prevText;
+        }
+    });
+}
+
 // Initialize Everything
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
@@ -997,6 +1146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSmoothScroll();
     initScrollAnimations();
     setCurrentYear();
+    initContactAutofill();
+    initContactForm();
 
     // Theme toggle buttons
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
