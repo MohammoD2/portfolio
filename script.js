@@ -276,7 +276,7 @@ function renderEducation() {
     portfolioData.education.forEach((edu, index) => {
         const eduItem = document.createElement('div');
         eduItem.className = 'achievement-item';
-        eduItem.style.animationDelay = `${index * 0.1}s`;
+        eduItem.style.transitionDelay = `${index * 0.08}s`;
 
         eduItem.innerHTML = `
             <div>
@@ -305,7 +305,7 @@ function renderCertifications() {
     certifications.forEach((cert, index) => {
         const certItem = document.createElement('div');
         certItem.className = 'certification-item';
-        certItem.style.animationDelay = `${index * 0.1}s`;
+        certItem.style.transitionDelay = `${index * 0.08}s`;
 
         // Only show "View Certificate" link for CampusX certificate
         const isCampusX = cert.degree.includes('CampusX');
@@ -557,55 +557,63 @@ function renderProjects() {
     const container = document.getElementById('projectsGrid');
     if (!container) return;
 
-    let visibleCount = 6;
+    const INITIAL = 6;
+    let shown = 0;
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    function renderProjectsList() {
-        container.innerHTML = '';
-        const visibleProjects = portfolioData.projects.slice(0, visibleCount);
+    function createProjectCard(project, staggerIndex) {
+        const projectCard = document.createElement('div');
+        projectCard.className = 'project-card';
+        projectCard.style.transitionDelay = `${staggerIndex * 0.07}s`;
+        projectCard.setAttribute('role', 'button');
+        projectCard.setAttribute('tabindex', '0');
+        projectCard.setAttribute('aria-label', `View details for ${project.title}`);
 
-        visibleProjects.forEach((project, index) => {
-            const projectCard = document.createElement('div');
-            projectCard.className = 'project-card';
-            projectCard.style.animationDelay = `${index * 0.1}s`;
-            projectCard.style.transitionDelay = `${index * 0.05}s`;
-
-            projectCard.innerHTML = `
-                <div class="project-image-container">
-                    <img src="${project.image}" alt="${project.title}" class="project-image" onerror="this.src='https://via.placeholder.com/400x300?text=${encodeURIComponent(project.title)}'">
-                    <div class="project-overlay">
-                        <div class="project-overlay-button">View Details</div>
-                    </div>
+        projectCard.innerHTML = `
+            <div class="project-image-container">
+                <img src="${project.image}" alt="Screenshot of ${project.title} project" class="project-image" loading="lazy" decoding="async" width="400" height="300" onerror="this.src='https://via.placeholder.com/400x300?text=${encodeURIComponent(project.title)}'">
+                <div class="project-overlay">
+                    <div class="project-overlay-button">View Details</div>
                 </div>
-                <div class="project-card-footer">
-                    <div class="project-category">${project.category}</div>
-                    <h3 class="project-card-title">${project.title}</h3>
-                    <p class="project-description">${project.description}</p>
-                    <div class="project-stack">
-                        ${project.stack.slice(0, 3).map(tech => 
-                            `<span class="project-stack-badge">${tech}</span>`
-                        ).join('')}
-                        ${project.stack.length > 3 ? 
-                            `<span class="project-stack-badge">+${project.stack.length - 3}</span>` : ''}
-                    </div>
+            </div>
+            <div class="project-card-footer">
+                <div class="project-category">${project.category}</div>
+                <h3 class="project-card-title">${project.title}</h3>
+                <p class="project-description">${project.description}</p>
+                <div class="project-stack">
+                    ${project.stack.slice(0, 3).map(tech =>
+                        `<span class="project-stack-badge">${tech}</span>`
+                    ).join('')}
+                    ${project.stack.length > 3 ?
+                        `<span class="project-stack-badge">+${project.stack.length - 3}</span>` : ''}
                 </div>
-            `;
+            </div>
+        `;
 
-            projectCard.addEventListener('click', () => openProjectModal(project));
-            container.appendChild(projectCard);
-            
-            // Trigger animation after a short delay
-            setTimeout(() => {
-                projectCard.style.opacity = '0';
-                projectCard.style.transform = 'translateY(30px) scale(0.95)';
-                setTimeout(() => {
-                    projectCard.classList.add('animate');
-                }, 50);
-            }, 10);
+        projectCard.addEventListener('click', () => openProjectModal(project));
+        projectCard.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openProjectModal(project);
+            }
         });
+        return projectCard;
+    }
 
-        if (visibleCount >= portfolioData.projects.length) {
+    function appendProjects(upTo) {
+        const newCards = [];
+        for (let i = shown; i < upTo && i < portfolioData.projects.length; i++) {
+            const card = createProjectCard(portfolioData.projects[i], i - shown);
+            container.appendChild(card);
+            newCards.push(card);
+        }
+        shown = Math.min(upTo, portfolioData.projects.length);
+
+        // Reveal only the freshly added cards (prevents re-animating earlier ones)
+        revealOnScroll(newCards);
+
+        if (shown >= portfolioData.projects.length) {
             loadMoreContainer.style.display = 'none';
         } else {
             loadMoreContainer.style.display = 'block';
@@ -613,22 +621,28 @@ function renderProjects() {
     }
 
     loadMoreBtn?.addEventListener('click', () => {
-        visibleCount = portfolioData.projects.length;
-        renderProjectsList();
+        appendProjects(portfolioData.projects.length);
     });
 
-    renderProjectsList();
+    appendProjects(INITIAL);
 }
+
+let lastFocusedBeforeModal = null;
 
 function openProjectModal(project) {
     const modal = document.getElementById('projectModal');
     const modalBody = document.getElementById('modalBody');
     if (!modal || !modalBody) return;
 
+    // Remember what had focus so we can restore it on close (a11y)
+    lastFocusedBeforeModal = document.activeElement;
+
     // Add smooth opening animation
     modal.style.opacity = '0';
     modal.classList.add('active');
-    
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
     // Trigger animation
     requestAnimationFrame(() => {
         modal.style.transition = 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -636,10 +650,10 @@ function openProjectModal(project) {
     });
 
     modalBody.innerHTML = `
-        <img src="${project.image}" alt="${project.title}" class="modal-image" onerror="this.src='https://via.placeholder.com/800x600?text=${encodeURIComponent(project.title)}'">
+        <img src="${project.image}" alt="Screenshot of ${project.title} project" class="modal-image" decoding="async" onerror="this.src='https://via.placeholder.com/800x600?text=${encodeURIComponent(project.title)}'">
         <div class="modal-content-section">
             <span class="badge badge-outline modal-badge">${project.category}</span>
-            <h2 class="modal-title">${project.title}</h2>
+            <h2 class="modal-title" id="modalTitleLive">${project.title}</h2>
             <p class="modal-description">${project.description}</p>
             <div>
                 <h4 class="modal-stack-title">Tech Stack</h4>
@@ -650,13 +664,17 @@ function openProjectModal(project) {
                 </div>
             </div>
             <div class="modal-button">
-                ${project.link ? `<a href="${project.link}" target="_blank" class="btn btn-primary" style="margin-right: 1rem;">View Project →</a>` : ''}
-                ${project.github ? `<a href="${project.github}" target="_blank" class="btn btn-outline">View Code →</a>` : ''}
+                ${project.link ? `<a href="${project.link}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="margin-right: 1rem;">View Project →</a>` : ''}
+                ${project.github ? `<a href="${project.github}" target="_blank" rel="noopener noreferrer" class="btn btn-outline">View Code →</a>` : ''}
             </div>
         </div>
     `;
 
     modal.classList.add('active');
+
+    // Move focus into the dialog for keyboard users
+    const closeBtn = document.getElementById('modalClose');
+    setTimeout(() => closeBtn?.focus(), 60);
 }
 
 // Render Stats
@@ -667,7 +685,7 @@ function renderStats() {
     portfolioData.stats.forEach((stat, index) => {
         const statItem = document.createElement('div');
         statItem.className = 'stat-item';
-        statItem.style.animationDelay = `${index * 0.1}s`;
+        statItem.style.transitionDelay = `${index * 0.08}s`;
 
         statItem.innerHTML = `
             <h3 class="stat-value">${stat.value}</h3>
@@ -686,7 +704,7 @@ function renderAchievements() {
     portfolioData.achievements.forEach((achievement, index) => {
         const achievementItem = document.createElement('div');
         achievementItem.className = 'achievement-item';
-        achievementItem.style.animationDelay = `${index * 0.1}s`;
+        achievementItem.style.transitionDelay = `${index * 0.08}s`;
 
         achievementItem.innerHTML = `
             <span class="achievement-bullet"></span>
@@ -783,18 +801,44 @@ function initProjectModal() {
         modal.style.opacity = '0';
         setTimeout(() => {
             modal?.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
             modal.style.opacity = '';
             modal.style.transition = '';
+            document.body.style.overflow = '';
+            // Restore focus to the element that opened the modal
+            if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+                lastFocusedBeforeModal.focus();
+            }
         }, 300);
     }
 
     modalOverlay?.addEventListener('click', closeModal);
     modalClose?.addEventListener('click', closeModal);
 
-    // Close on Escape key
+    // Close on Escape + trap focus inside the dialog while open
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        if (!modal?.classList.contains('active')) return;
+
+        if (e.key === 'Escape') {
             closeModal();
+            return;
+        }
+
+        if (e.key === 'Tab') {
+            const focusable = modal.querySelectorAll(
+                'a[href], button:not([disabled]), input, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
         }
     });
 }
@@ -807,10 +851,10 @@ function renderTimeline() {
     portfolioData.timeline.forEach((item, index) => {
         const timelineItem = document.createElement('div');
         timelineItem.className = 'timeline-item';
-        timelineItem.style.animationDelay = `${index * 0.1}s`;
+        timelineItem.style.transitionDelay = `${index * 0.08}s`;
 
         timelineItem.innerHTML = `
-            <img src="${item.image}" alt="${item.title}" class="timeline-image" onerror="this.src='https://via.placeholder.com/400x500?text=${encodeURIComponent(item.title)}'">
+            <img src="${item.image}" alt="${item.title}" class="timeline-image" loading="lazy" decoding="async" width="400" height="500" onerror="this.src='https://via.placeholder.com/400x500?text=${encodeURIComponent(item.title)}'">
             <div class="timeline-overlay"></div>
             <div class="timeline-content">
                 <div class="timeline-year">
@@ -839,7 +883,7 @@ function renderServices() {
     portfolioData.services.forEach((service, index) => {
         const serviceCard = document.createElement('div');
         serviceCard.className = 'service-card';
-        serviceCard.style.animationDelay = `${index * 0.1}s`;
+        serviceCard.style.transitionDelay = `${index * 0.08}s`;
 
         serviceCard.innerHTML = `
             <div class="service-icon"><i class="${service.icon}"></i></div>
@@ -868,7 +912,7 @@ function renderExpertise() {
     allSkills.forEach((category, idx) => {
         const expertiseCard = document.createElement('div');
         expertiseCard.className = `expertise-card ${category.compact ? 'compact' : ''}`;
-        expertiseCard.style.animationDelay = `${idx * 0.2}s`;
+        expertiseCard.style.animationDelay = `${idx * 0.08}s`;
 
         expertiseCard.innerHTML = `
             <h3 class="expertise-title">${category.title}</h3>
@@ -902,70 +946,210 @@ function initSmoothScroll() {
     });
 }
 
-// Intersection Observer for Animations
-function initScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-    };
+/*
+ * Single shared IntersectionObserver used for all card-style reveals.
+ * Each element animates exactly once (then is unobserved), and stagger is
+ * handled purely via CSS animation-delay set at render time. This removes
+ * the old setTimeout-based observation that caused elements to flicker /
+ * animate late the first time a section scrolled into view.
+ */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let sharedRevealObserver = null;
+function getRevealObserver() {
+    if (sharedRevealObserver) return sharedRevealObserver;
+    sharedRevealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                el.classList.add('animate');
+                // Once the reveal finishes, drop the stagger delay so later
+                // hover transitions fire instantly (transition-delay is shared).
+                el.addEventListener('transitionend', function clearDelay() {
+                    el.style.transitionDelay = '';
+                    el.removeEventListener('transitionend', clearDelay);
+                });
+                sharedRevealObserver.unobserve(el);
+            }
+        });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+    return sharedRevealObserver;
+}
+
+// Reveal a set of elements (NodeList, array, or selector) using .animate
+function revealOnScroll(elements) {
+    const els = typeof elements === 'string'
+        ? document.querySelectorAll(elements)
+        : elements;
+    if (!els || !els.length) return;
+
+    if (prefersReducedMotion) {
+        els.forEach((el) => el.classList.add('animate'));
+        return;
+    }
+
+    const observer = getRevealObserver();
+    els.forEach((el) => observer.observe(el));
+}
+
+// Highlight the nav link for the section currently in view
+function initScrollSpy() {
+    const navLinks = Array.from(document.querySelectorAll('.desktop-nav .nav-link[href^="#"]'));
+    if (!navLinks.length) return;
+
+    const map = new Map();
+    navLinks.forEach((link) => {
+        const id = link.getAttribute('href').slice(1);
+        const section = document.getElementById(id);
+        if (section) map.set(section, link);
+    });
+    if (!map.size) return;
 
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
+        entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.classList.add('animate');
-                }, index * 100);
+                navLinks.forEach((l) => l.classList.remove('active'));
+                const active = map.get(entry.target);
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { threshold: 0.2, rootMargin: '-45% 0px -45% 0px' });
+
+    map.forEach((_, section) => observer.observe(section));
+}
+
+// Intersection Observer for card animations
+function initScrollAnimations() {
+    revealOnScroll(
+        '.stat-item, .service-card, .expertise-card, .achievement-item, .certification-item, .timeline-item, .testimonial-card'
+    );
+    // Project cards are observed inside renderProjects (they render in batches)
+}
+
+// Magnetic hover for hero CTAs (skips touch devices and reduced-motion users)
+function initMagneticButtons() {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouch = window.matchMedia('(hover: none)').matches;
+    if (prefersReduced || isTouch) return;
+
+    const magnets = document.querySelectorAll('.hero-buttons .btn');
+    magnets.forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const mx = e.clientX - rect.left - rect.width / 2;
+            const my = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${mx * 0.22}px, ${my * 0.3}px)`;
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = '';
+        });
+    });
+}
+
+/*
+ * Reveal section headings, glass panels and the footer on scroll.
+ * - Normal content slides up (transform + opacity).
+ * - Frosted-glass surfaces (.reveal-soft) fade with OPACITY ONLY, because
+ *   transforming a backdrop-filter element makes the blur flicker.
+ */
+function initReveal() {
+    if (prefersReducedMotion) return;
+
+    // Selectors that are frosted-glass and must NOT be transformed
+    const SOFT = new Set([
+        'about-content',
+        'alloftech-content',
+        'footer-form-section'
+    ]);
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
                 observer.unobserve(entry.target);
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
 
-    // Stats animation
-    document.querySelectorAll('.stat-item').forEach((el, index) => {
+    function register(el, delayMs, soft) {
+        if (!el) return;
+        el.classList.add('reveal');
+        if (soft || SOFT.has(el.className.split(' ')[0])) {
+            el.classList.add('reveal-soft');
+        }
+        if (delayMs) el.style.setProperty('--reveal-delay', `${delayMs}ms`);
         observer.observe(el);
+    }
+
+    // Stagger the direct children of each section header (badge, title, etc.)
+    document.querySelectorAll('.section-header').forEach((header) => {
+        Array.from(header.children).forEach((child, i) => {
+            register(child, i * 90);
+        });
     });
 
-    // Projects animation
-    document.querySelectorAll('.project-card').forEach((el, index) => {
-        setTimeout(() => {
-            observer.observe(el);
-        }, index * 50);
+    // Standalone glass panels (fade only)
+    document.querySelectorAll('.alloftech-content, .footer-form-section').forEach((el) => {
+        register(el, 0, true);
     });
 
-    // Services animation
-    document.querySelectorAll('.service-card').forEach((el, index) => {
-        setTimeout(() => {
-            observer.observe(el);
-        }, index * 100);
-    });
+    // Footer columns stagger
+    document.querySelectorAll(
+        '.footer-brand, .footer-links, .footer-contact, .footer-bottom'
+    ).forEach((el, i) => register(el, i * 90));
+}
 
-    // Expertise animation
-    document.querySelectorAll('.expertise-card').forEach((el, index) => {
-        setTimeout(() => {
-            observer.observe(el);
-        }, index * 150);
-    });
+// Animated count-up for the stats band
+function initCountUp() {
+    const values = document.querySelectorAll('.stat-value');
+    if (!values.length) return;
 
-    // Achievement items
-    document.querySelectorAll('.achievement-item, .certification-item').forEach((el, index) => {
-        setTimeout(() => {
-            observer.observe(el);
-        }, index * 50);
+    // Parse "15+", "95%", "$20K+" into prefix / number / suffix
+    const parsed = [];
+    values.forEach((el) => {
+        const raw = el.textContent.trim();
+        const m = raw.match(/^(\D*)(\d+(?:\.\d+)?)(.*)$/);
+        if (!m) return;
+        parsed.push({ el, prefix: m[1], target: parseFloat(m[2]), suffix: m[3], raw });
     });
+    if (!parsed.length) return;
 
-    // Timeline items
-    document.querySelectorAll('.timeline-item').forEach((el, index) => {
-        setTimeout(() => {
-            observer.observe(el);
-        }, index * 100);
-    });
+    if (prefersReducedMotion) return; // leave final values in place
 
-    // Testimonial cards
-    document.querySelectorAll('.testimonial-card').forEach((el, index) => {
-        setTimeout(() => {
-            observer.observe(el);
-        }, index * 80);
-    });
+    // Reset to start values
+    parsed.forEach((p) => { p.el.textContent = `${p.prefix}0${p.suffix}`; });
+
+    let started = false;
+    function run() {
+        if (started) return;
+        started = true;
+        const duration = 1400;
+        const start = performance.now();
+        function frame(now) {
+            const t = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+            parsed.forEach((p) => {
+                const isFloat = !Number.isInteger(p.target);
+                const current = p.target * eased;
+                const display = isFloat ? current.toFixed(1) : Math.round(current);
+                p.el.textContent = `${p.prefix}${display}${p.suffix}`;
+            });
+            if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    const section = document.querySelector('.stats-section');
+    if (!section) { run(); return; }
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                run();
+                obs.disconnect();
+            }
+        });
+    }, { threshold: 0.4 });
+    obs.observe(section);
 }
 
 // Set Current Year
@@ -1146,6 +1330,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAllOfTech();
     initSmoothScroll();
     initScrollAnimations();
+    initReveal();
+    initCountUp();
+    initScrollSpy();
+    initMagneticButtons();
     setCurrentYear();
     initContactAutofill();
     initContactForm();

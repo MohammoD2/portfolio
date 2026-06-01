@@ -1,3 +1,18 @@
+/*
+ * Chatbot brand tokens.
+ * These were previously referenced but never defined, leaving the widget
+ * with no gradient/border/text colors. Mapped to the site's brand palette.
+ */
+:root {
+    --primary-purple: #9333ea;
+    --primary-cyan: #3b82f6;
+    --primary-orange: #ec4899;
+    --secondary-amber: #f59e0b;
+    --border-color: rgba(255, 255, 255, 0.14);
+    --text-primary: #f5f3ff;
+    --text-secondary: #b6a8d6;
+}
+
 .chatbot-container {
     position: fixed;
     bottom: 20px;

@@ -54,7 +54,7 @@
     <link rel="stylesheet" href="chatbot.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400&family=Radio+Canada:wght@400&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Radio+Canada:wght@400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <!-- Schema.org Structured Data - Person -->
@@ -185,6 +185,7 @@
     </script>
 </head>
 <body>
+    <a href="#main" class="skip-link">Skip to main content</a>
     <!-- Header -->
     <header class="header" id="header">
         <div class="header-container">
@@ -230,9 +231,9 @@
         </div>
     </header>
 
-    <main class="main-content">
+    <main class="main-content" id="main">
         <!-- Hero Section -->
-        <section class="hero-section">
+        <section class="hero-section" aria-label="Introduction">
             <div class="hero-background">
                 <div class="marquee-container marquee-1">
                     <div class="marquee-text">Developer Founder Mentor</div>
@@ -288,7 +289,7 @@
                     </div>
                     <div class="hero-image">
                         <div class="hero-image-wrapper">
-                            <img src="images/My profressional photos.png" alt="Ibrahim Hussain - Machine Learning Engineer and Data Scientist, Founder & CEO of AllOfTech" class="hero-img">
+                            <img src="images/My profressional photos.png" alt="Ibrahim Hussain - Machine Learning Engineer and Data Scientist, Founder & CEO of AllOfTech" class="hero-img" width="600" height="700" fetchpriority="high" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -361,10 +362,10 @@
         </section>
 
         <!-- Project Modal -->
-        <div class="modal" id="projectModal">
+        <div class="modal" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="modalTitleLive" aria-hidden="true">
             <div class="modal-overlay" id="modalOverlay"></div>
-            <div class="modal-content">
-                <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-content" role="document">
+                <button class="modal-close" id="modalClose" aria-label="Close project details">✕</button>
                 <div class="modal-body" id="modalBody">
                     <!-- Modal content will be populated by JavaScript -->
                 </div>
