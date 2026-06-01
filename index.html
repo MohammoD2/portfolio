@@ -52,6 +52,31 @@
     <link rel="apple-touch-icon" href="images/My profressional photos_tab.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="chatbot.css">
+    <!--
+      Early-init script (runs synchronously before first paint):
+        1. Adds `is-entering`  → CSS immediately hides hero elements (prevents FOUC).
+        2. Applies saved theme → avoids light/dark flash on reload.
+    -->
+    <script>
+      (function(){
+        document.documentElement.classList.add('is-entering');
+        if(localStorage.getItem('theme') !== 'light'){
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <!-- For JS-disabled visitors: show everything immediately -->
+    <noscript><style>
+      #page-loader{display:none!important}
+      html.is-entering .header,
+      html.is-entering .hero-subtitle,
+      html.is-entering .hero-title,
+      html.is-entering .animated-roles,
+      html.is-entering .about-me-section,
+      html.is-entering .hero-buttons,
+      html.is-entering .hero-social,
+      html.is-entering .hero-image{opacity:1!important;transform:none!important;animation:none!important}
+    </style></noscript>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Radio+Canada:wght@400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
@@ -185,6 +210,34 @@
     </script>
 </head>
 <body>
+    <!-- ═══════════════════════════════════════════════════════════
+         PAGE LOADER — full-screen branded entry overlay.
+         Removed from DOM by initPageEntry() after the sequence.
+         aria-hidden + role="presentation" so screen-readers skip it.
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="page-loader" aria-hidden="true" role="presentation">
+        <div class="loader-inner">
+            <!-- Decorative spinning rings + glowing monogram -->
+            <div class="loader-glyph">
+                <div class="loader-ring loader-ring-1"></div>
+                <div class="loader-ring loader-ring-2"></div>
+                <div class="loader-glow"></div>
+                <span class="loader-monogram">IH</span>
+            </div>
+            <!-- Identity -->
+            <p class="loader-name">Ibrahim Hussain</p>
+            <p class="loader-role-single">Founder &amp; CEO · AllOfTech</p>
+            <!-- Pulsing data dots -->
+            <div class="loader-dots" aria-hidden="true">
+                <span></span><span></span><span></span>
+            </div>
+            <!-- Thin progress bar (CSS-driven fill) -->
+            <div class="loader-track">
+                <div class="loader-fill"></div>
+            </div>
+        </div>
+    </div>
+
     <a href="#main" class="skip-link">Skip to main content</a>
     <!-- Header -->
     <header class="header" id="header">

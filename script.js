@@ -797,13 +797,30 @@ function initProjectModal() {
     const modalClose = document.getElementById('modalClose');
 
     function closeModal() {
+        const modalContent = modal.querySelector('.modal-content');
+
+        /* Animate the card out: scale-down + fade, simultaneously with the backdrop */
+        if (modalContent) {
+            modalContent.style.transition =
+                'transform 0.28s cubic-bezier(0.4, 0, 1, 1), ' +
+                'opacity  0.28s cubic-bezier(0.4, 0, 1, 1)';
+            modalContent.style.transform = 'translateY(14px) scale(0.96)';
+            modalContent.style.opacity   = '0';
+        }
+
         modal.style.transition = 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         modal.style.opacity = '0';
         setTimeout(() => {
             modal?.classList.remove('active');
             modal.setAttribute('aria-hidden', 'true');
-            modal.style.opacity = '';
+            modal.style.opacity    = '';
             modal.style.transition = '';
+            /* Reset content styles so the next open starts clean */
+            if (modalContent) {
+                modalContent.style.transition = '';
+                modalContent.style.transform  = '';
+                modalContent.style.opacity    = '';
+            }
             document.body.style.overflow = '';
             // Restore focus to the element that opened the modal
             if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
@@ -1164,6 +1181,161 @@ function setCurrentYear() {
     }
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   initPageEntry
+   ──────────────────────────────────────────────────────────────────
+   Orchestrates the full site-entrance experience on every page load:
+
+   PHASE 1 — Loader (CSS-driven, 0 → ~1 400 ms)
+     • Loader is already visible via HTML/CSS (no JS required to show it).
+     • CSS animations handle the monogram, ring spin, text fade-ups,
+       pulsing dots, and the progress bar fill (1.25 s, auto).
+
+   PHASE 2 — Loader exit (JS, ~1 400 ms)
+     • Adds `.loader-exit` class → CSS fades + lifts the overlay (0.55 s).
+     • After 600 ms removes the element entirely.
+
+   PHASE 3 — Hero cascade (JS, starts ~1 500 ms)
+     • Reveals: header → subtitle → title + image → roles → about
+                → buttons → social (110 ms steps).
+     • Each uses a CSS transition triggered by inline-style changes.
+
+   PHASE 4 — Cleanup (~2 450 ms)
+     • Sets `animation:none` inline on wrapper elements so their CSS
+       entry keyframes (slideInLeftHero, slideInRightHero, etc.) don't
+       re-fire when `is-entering` is removed.
+     • Clears inline styles on children (CSS cascade takes over).
+     • Removes `is-entering`, adds `page-loaded`.
+
+   prefers-reduced-motion: exits in Phase 1 instantly — everything shown.
+   ══════════════════════════════════════════════════════════════════ */
+function initPageEntry() {
+    const html         = document.documentElement;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const loader       = document.getElementById('page-loader');
+
+    /* ── Reduced motion: skip the whole show ── */
+    if (prefersReduced) {
+        html.classList.remove('is-entering');
+        if (loader) loader.remove();
+        return;
+    }
+
+    /* ── Gather hero elements ── */
+    const header       = document.getElementById('header');
+    const heroSection  = document.querySelector('.hero-section');
+    const heroText     = document.querySelector('.hero-text');
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    const heroTitle    = document.querySelector('.hero-title');
+    const animRoles    = document.querySelector('.animated-roles');
+    const aboutSect    = document.querySelector('.about-me-section');
+    const heroBtns     = document.querySelector('.hero-buttons');
+    const heroSocial   = document.querySelector('.hero-social');
+    const heroImage    = document.querySelector('.hero-image');
+
+    /* ── Reveal helper ──
+       Transitions opacity + transform from the `is-entering` hidden state
+       to fully visible. Delay is measured from DOMContentLoaded.          */
+    const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+    const DUR  = '0.6s';
+
+    function revealEl(el, delayMs) {
+        if (!el) return;
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                el.style.transition = `opacity ${DUR} ${EASE}, transform ${DUR} ${EASE}`;
+                el.style.opacity    = '1';
+                el.style.transform  = 'none';
+            });
+        }, delayMs);
+    }
+
+    /* ── Phase 2: Loader exit at 850 ms ── */
+    /* The CSS progress-bar fill takes 0.7 s + 0.1 s delay = 0.8 s total,
+       so we exit 50 ms after it finishes.                                   */
+    const LOADER_EXIT_MS = 850;
+
+    setTimeout(() => {
+        if (loader) {
+            loader.classList.add('loader-exit');
+            /* Remove from DOM after the CSS transition completes */
+            setTimeout(() => { if (loader.parentNode) loader.remove(); }, 600);
+        }
+    }, LOADER_EXIT_MS);
+
+    /* ── Phase 3: Hero cascade (overlaps with loader fade) ── */
+    /* Starts 120 ms after the loader begins fading so the hero
+       "emerges" through the disappearing overlay.               */
+    const H = LOADER_EXIT_MS + 120; // base = 1 520 ms
+
+    revealEl(header,       H);           // 1 520 ms — fixed header drops in
+    revealEl(heroSubtitle, H + 110);     // 1 630 ms
+    revealEl(heroTitle,    H + 220);     // 1 740 ms
+    revealEl(heroImage,    H + 200);     // 1 720 ms — right side in parallel
+    revealEl(animRoles,    H + 340);     // 1 860 ms
+    revealEl(aboutSect,    H + 390);     // 1 910 ms — parent reveal; item stagger fires naturally
+    revealEl(heroBtns,     H + 510);     // 2 030 ms
+    revealEl(heroSocial,   H + 620);     // 2 140 ms
+
+    /* ── Phase 4: Cleanup ──
+       Last reveal at H+620 ms, transition = 600 ms → done at H+1220 ms.
+       Add a 100 ms buffer → cleanup at H+1320 ms ≈ 2 840 ms.             */
+    setTimeout(() => {
+        /* Prevent CSS entry animations from re-firing when is-entering is removed.
+           Inline `animation:none` beats any CSS `animation` rule in the cascade.
+           NOTE: .hero-img's `float` keyframe lives on a *different* element — safe. */
+        [header, heroSection, heroText, heroImage].forEach(el => {
+            if (el) el.style.animation = 'none';
+        });
+
+        /* Clear inline transition/opacity/transform — CSS cascade takes over.
+           All these elements default to opacity:1, transform:none in CSS.   */
+        [heroSubtitle, heroTitle, animRoles, aboutSect, heroBtns, heroSocial, heroImage]
+            .forEach(el => {
+                if (!el) return;
+                el.style.transition = '';
+                el.style.opacity    = '';
+                el.style.transform  = '';
+            });
+        if (header) {
+            header.style.transition = '';
+            header.style.opacity    = '';
+            header.style.transform  = '';
+        }
+
+        html.classList.remove('is-entering');
+        html.classList.add('page-loaded');
+    }, H + 1320);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   initButtonRipple
+   Injects a <span class="ripple"> at the exact click/touch origin on
+   every .btn element. CSS @keyframes btn-ripple handles the spread.
+   Skipped entirely for prefers-reduced-motion users.
+   ══════════════════════════════════════════════════════════════════ */
+function initButtonRipple() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            const rect = this.getBoundingClientRect();
+            const x    = e.clientX - rect.left;
+            const y    = e.clientY - rect.top;
+            const size = Math.max(rect.width, rect.height);
+
+            const ripple = document.createElement('span');
+            ripple.className     = 'ripple';
+            ripple.style.cssText =
+                `width:${size}px;height:${size}px;` +
+                `left:${x - size / 2}px;top:${y - size / 2}px;`;
+
+            this.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+        });
+    });
+}
+
 function initContactAutofill() {
     const serviceButtons = document.querySelectorAll('[data-service]');
     const messageField = document.getElementById('message');
@@ -1315,6 +1487,7 @@ function initContactForm() {
 
 // Initialize Everything
 document.addEventListener('DOMContentLoaded', () => {
+    initPageEntry();        // ← FIRST: starts loader timing, suppresses CSS hero animations
     initTheme();
     initMobileMenu();
     initHeaderScroll();
@@ -1341,6 +1514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setCurrentYear();
     initContactAutofill();
     initContactForm();
+    initButtonRipple();     // ← click-ripple on all .btn elements
 
     // Theme toggle buttons
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
