@@ -285,7 +285,7 @@ function renderEducation() {
                 <p class="text-muted">${edu.focus}</p>
                 <p class="text-muted" style="font-size: 0.875rem;">${edu.year}</p>
                 ${edu.certificate ? `
-                    <a href="${edu.certificate}" target="_blank" class="footer-link" style="margin-top: 0.5rem; display: inline-block;">View Certificate →</a>
+                    <a href="${edu.certificate}" target="_blank" rel="noopener noreferrer" class="footer-link" style="margin-top: 0.5rem; display: inline-block;">View Certificate →</a>
                 ` : ''}
             </div>
         `;
@@ -310,7 +310,7 @@ function renderCertifications() {
         // Only show "View Certificate" link for CampusX certificate
         const isCampusX = cert.degree.includes('CampusX');
         const certificateLink = isCampusX && cert.certificate 
-            ? ` - <a href="${cert.certificate}" target="_blank" class="footer-link">View Certificate</a>` 
+            ? ` - <a href="${cert.certificate}" target="_blank" rel="noopener noreferrer" class="footer-link">View Certificate</a>` 
             : '';
 
         certItem.innerHTML = `
@@ -373,16 +373,16 @@ function renderAllOfTech() {
         </div>
 
         <div class="alloftech-links">
-            <a href="${alloftech.website}" target="_blank" class="alloftech-link">
+            <a href="${alloftech.website}" target="_blank" rel="noopener noreferrer" class="alloftech-link">
                 <i class="fas fa-globe"></i> Visit Website
             </a>
             <a href="mailto:${alloftech.email}" class="alloftech-link">
                 <i class="fas fa-envelope"></i> Contact Us
             </a>
-            <a href="${alloftech.facebook}" target="_blank" class="alloftech-link">
+            <a href="${alloftech.facebook}" target="_blank" rel="noopener noreferrer" class="alloftech-link">
                 <i class="fab fa-facebook"></i> Facebook
             </a>
-            <a href="${alloftech.website}" target="_blank" class="alloftech-link">
+            <a href="${alloftech.website}" target="_blank" rel="noopener noreferrer" class="alloftech-link">
                 <i class="fas fa-rocket"></i> Start Your Project
             </a>
         </div>
@@ -864,7 +864,7 @@ function renderTimeline() {
                 <h3 class="timeline-title">${item.title}</h3>
                 <p class="timeline-description">${item.description}</p>
                 ${item.link ? `
-                    <a href="${item.link}" target="_blank" class="timeline-link">
+                    <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="timeline-link">
                         Read More →
                     </a>
                 ` : ''}
@@ -932,7 +932,11 @@ function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             const href = this.getAttribute('href');
-            if (href === '#') return;
+            if (href === '#') {
+                // Placeholder links should not jump the page to top.
+                e.preventDefault();
+                return;
+            }
             
             e.preventDefault();
             const target = document.querySelector(href);
@@ -949,9 +953,9 @@ function initSmoothScroll() {
 /*
  * Single shared IntersectionObserver used for all card-style reveals.
  * Each element animates exactly once (then is unobserved), and stagger is
- * handled purely via CSS animation-delay set at render time. This removes
- * the old setTimeout-based observation that caused elements to flicker /
- * animate late the first time a section scrolled into view.
+ * handled via per-card delay styles set at render time. This removes the
+ * old setTimeout-based observation that caused elements to flicker / animate
+ * late the first time a section scrolled into view.
  */
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1074,7 +1078,7 @@ function initReveal() {
     function register(el, delayMs, soft) {
         if (!el) return;
         el.classList.add('reveal');
-        if (soft || SOFT.has(el.className.split(' ')[0])) {
+        if (soft || Array.from(SOFT).some((className) => el.classList.contains(className))) {
             el.classList.add('reveal-soft');
         }
         if (delayMs) el.style.setProperty('--reveal-delay', `${delayMs}ms`);
